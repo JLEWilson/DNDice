@@ -3,9 +3,10 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import DiceIcons from "../icons";
 import { Dice } from "../db";
+import { MacroRandomizer } from "./Utils";
 
 export default function Landing() {
- const [output, setOutput] = React.useState<Dice>({
+ const [macro, setMacro] = React.useState<Dice>({
     D4: 0,
     D6: 0,
     D8: 0,
@@ -14,18 +15,24 @@ export default function Landing() {
     D20: 0,
     D100: 0,
   });
+  const [roll, setRoll] = React.useState<number>(0)
 
-  const incrementOutput = (key: keyof Dice) => {
-    setOutput((prevOutput) => ({
-      ...prevOutput,
-      [key]: prevOutput[key] + 1,
+  const rollMacro = (macro: Dice) => {
+    const x = MacroRandomizer(macro)
+    setRoll(x)
+  }
+
+  const incrementMacro = (key: keyof Dice) => {
+    setMacro((prevMacro) => ({
+      ...prevMacro,
+      [key]: prevMacro[key] + 1,
     }));
   };
 
-  const decrementOutput = (key: keyof Dice) => {
-    setOutput((prevOutput) => ({
-      ...prevOutput,
-      [key]: Math.max(0, prevOutput[key] - 1),
+  const decrementMacro = (key: keyof Dice) => {
+    setMacro((prevMacro) => ({
+      ...prevMacro,
+      [key]: Math.max(0, prevMacro[key] - 1),
     }));
   };
 
@@ -41,21 +48,32 @@ export default function Landing() {
               },
               styles.button,
             ]}
-            onPress={() => incrementOutput(key as keyof Dice)}
+            onPress={() => incrementMacro(key as keyof Dice)}
           >
             {value}
           </Pressable>
         ))}
       </View>
-      <Text style={styles.outputTitle}>Macro</Text>
-      <View style={styles.outputContainer}>
-        {Object.entries(output).map(([key, value]) => (
+      <Text style={styles.macroTitle}>Macro</Text>
+      <View style={styles.macroContainer}>
+        {Object.entries(macro).map(([key, value]) => (
           value > 0 &&
-          <Pressable key={key} style={styles.outputItem} onPress={() => decrementOutput(key as keyof Dice)}>
+          <Pressable key={key} style={styles.macroItem} onPress={() => decrementMacro(key as keyof Dice)}>
             {DiceIcons[key as keyof typeof DiceIcons]}
             <Text>{`: ${value}`}</Text>
           </Pressable>
         ))}
+      </View>
+      <View style={styles.buttonContainer}>
+          <Pressable onPress={() => rollMacro(macro)}>
+            <Text>Roll</Text>
+          </Pressable>
+      </View>
+      <View style={styles.outputContainer}>
+        {
+          roll > 0 &&
+          <Text style={styles.outputText}>{roll}</Text>
+        }
       </View>
     </View>
   );
@@ -75,7 +93,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  outputContainer: {
+  macroContainer: {
     flex: 1,
     flexWrap: "wrap",
     backgroundColor: "#fff",
@@ -83,11 +101,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "center",
   },
-  outputTitle: {
+  macroTitle: {
     fontSize: 20,
     marginRight: "auto"
   },
-  outputItem: {
+  macroItem: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
@@ -102,4 +120,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
     padding: 5,
   },
+  buttonContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  }, 
+  outputContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  }, 
+  outputText : {
+    fontSize: 40
+  }
 });
