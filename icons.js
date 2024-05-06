@@ -8,7 +8,7 @@ const D12 = <Icon name="dice-d12" size={30} color="#000000" />;
 const D20 = <Icon name="dice-d20" size={30} color="#000000" />;
 const D100 = <Icon name="cash-100" size={35} color="#000000" />;
 
-const dice = {
+const DiceIcons = {
   D4,
   D6,
   D8,
@@ -18,4 +18,4 @@ const dice = {
   D100,
 };
 
-export default dice;
+export default DiceIcons;
