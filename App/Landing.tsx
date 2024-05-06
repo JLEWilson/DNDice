@@ -1,23 +1,38 @@
 import { View, Text, Pressable } from "react-native";
 import React from "react";
 import { StyleSheet } from "react-native";
-import dice from "../icons";
+import DiceIcons from "../icons";
+import { Dice } from "../db";
 
 export default function Landing() {
-  const [output, setOutput] = React.useState<React.ReactNode[]>([]);
+ const [output, setOutput] = React.useState<Dice>({
+    D4: 0,
+    D6: 0,
+    D8: 0,
+    D10: 0,
+    D12: 0,
+    D20: 0,
+    D100: 0,
+  });
 
-  const addToOutput = (value: React.ReactNode) => {
-    setOutput((prevOutput) => [...prevOutput, value]);
+  const incrementOutput = (key: keyof Dice) => {
+    setOutput((prevOutput) => ({
+      ...prevOutput,
+      [key]: prevOutput[key] + 1,
+    }));
   };
 
-  const removeFromOutput = (index: number) => {
-    setOutput((prevOutput) => prevOutput.filter((_, i) => i !== index));
+  const decrementOutput = (key: keyof Dice) => {
+    setOutput((prevOutput) => ({
+      ...prevOutput,
+      [key]: Math.max(0, prevOutput[key] - 1),
+    }));
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.diceContainer}>
-        {Object.entries(dice).map(([key, value]) => (
+        {Object.entries(DiceIcons).map(([key, value]) => (
           <Pressable
             key={key}
             style={({ pressed }) => [
@@ -26,20 +41,19 @@ export default function Landing() {
               },
               styles.button,
             ]}
-            onPress={() => addToOutput(value)}
+            onPress={() => incrementOutput(key as keyof Dice)}
           >
             {value}
           </Pressable>
         ))}
       </View>
+      <Text style={styles.outputTitle}>Macro</Text>
       <View style={styles.outputContainer}>
-        {output.map((item, index) => (
-          <Pressable
-            key={index}
-            style={styles.outputItem}
-            onPress={() => removeFromOutput(index)}
-          >
-            {item}
+        {Object.entries(output).map(([key, value]) => (
+          value > 0 &&
+          <Pressable key={key} style={styles.outputItem} onPress={() => decrementOutput(key as keyof Dice)}>
+            {DiceIcons[key as keyof typeof DiceIcons]}
+            <Text>{`: ${value}`}</Text>
           </Pressable>
         ))}
       </View>
@@ -69,18 +83,23 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "center",
   },
+  outputTitle: {
+    fontSize: 20,
+    marginRight: "auto"
+  },
   outputItem: {
-    flex: 1,
+    display: "flex",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 2,
-    padding: 2,
+    padding: 5,
+    marginHorizontal: 5,
+    marginVertical: 2,
   },
   button: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 2,
-    padding: 2,
+    padding: 5,
   },
 });
