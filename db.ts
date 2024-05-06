@@ -3,16 +3,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 interface MyMacro {
   id: string;
   name: string;
-  dice: {
-    2: number;
-    4: number;
-    6: number;
-    8: number;
-    10: number;
-    12: number;
-    20: number;
-    100: number;
-  };
+  dice: Dice
+}
+
+export interface Dice {
+  D4: number;
+  D6: number;
+  D8: number;
+  D10: number;
+  D12: number;
+  D20: number;
+  D100: number;
 }
 
 const STORAGE_KEY = "@my_objects";
