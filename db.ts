@@ -15,6 +15,15 @@ export interface Dice {
   D20: number;
   D100: number;
 }
+export interface DiceRolls {
+  D4: number[];
+  D6: number[];
+  D8: number[];
+  D10: number[];
+  D12: number[];
+  D20: number[];
+  D100: number[];
+}
 
 const STORAGE_KEY = "@my_objects";
 
