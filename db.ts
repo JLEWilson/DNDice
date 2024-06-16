@@ -4,6 +4,8 @@ interface MyMacro {
   id: string;
   name: string;
   dice: Dice
+  add: number
+  subtract: number
 }
 
 export interface Dice {
