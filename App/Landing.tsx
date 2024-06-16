@@ -25,12 +25,12 @@ export default function Landing() {
     D100: [],
   });
   const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
-  const [increment, setIncrement] = React.useState<Number>();
+  const [increment, setIncrement] = React.useState<number>(0  );
   const [showIncrement, setShowIncrement] = React.useState(false);
-  const [decrement, setDecrement] = React.useState<Number>();
+  const [decrement, setDecrement] = React.useState<number>(0);
   const [showDecrement, setShowDecrement] = React.useState(false);
   const [formattedRolls, setFormattedRolls] =  React.useState<JSX.Element[]>([]);
-
+  const scrollViewRef = React.useRef<ScrollView>(null)
 
   const clearDecrement = () => {
     setShowDecrement(false);
@@ -69,24 +69,26 @@ export default function Landing() {
 
   const formatAllRolls = (allRolls: DiceRolls[]) => {
     const rollEntries: JSX.Element[] = allRolls.map((rollSet, index) => {
-      const totalForSet = sumAllDiceRolls(rollSet);
+      let totalForSet = sumAllDiceRolls(rollSet);
+      totalForSet += increment
       return (
-        <View key={index}>
+        <View key={index} style={styles.outputBlock}>
           {Object.keys(rollSet).map((key) => {
             if (rollSet[key as keyof DiceRolls].length > 0) {
               return (
-                <View key={key}>
+                <View  key={key}>
                   <Text>{`${key}: ${formatRolls(rollSet[key as keyof DiceRolls])}`}</Text>
                 </View>
               );
             }
             return null;
           })}
-          <Text>{`Total: ${totalForSet}`}</Text>
+          {increment > 0 &&<Text>`+ ${increment}`</Text>}
+          <Text style={{fontSize: 20,fontWeight: "bold"}}>{`Total: ${totalForSet}`}</Text>
         </View>
       );
     });
-
+    
     setFormattedRolls(rollEntries);
   };
 
@@ -239,12 +241,12 @@ export default function Landing() {
 
       <View style={styles.box3}>
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollContainer}
-          // contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.scrollContent}
+          onContentSizeChange={() => {scrollViewRef.current?.scrollToEnd()}}
         >
-          <View>
-            {formattedRolls}
-          </View>
+          {formattedRolls}
         </ScrollView>
       </View>  
       
@@ -359,12 +361,14 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    paddingHorizontal: 35,
+    padding: 35,
     alignSelf: "stretch",
   },
   scrollContent: {
-    flex: 1,
-    alignSelf: "stretch",
+    paddingBottom:30
+  },
+  outputBlock: {
+    marginBottom: 20
   },
   textInput: {
     height: 40,
