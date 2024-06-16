@@ -71,6 +71,7 @@ export default function Landing() {
     const rollEntries: JSX.Element[] = allRolls.map((rollSet, index) => {
       let totalForSet = sumAllDiceRolls(rollSet);
       totalForSet += increment
+      totalForSet -= decrement
       return (
         <View key={index} style={styles.outputBlock}>
           {Object.keys(rollSet).map((key) => {
@@ -83,7 +84,8 @@ export default function Landing() {
             }
             return null;
           })}
-          {increment > 0 &&<Text>`+ ${increment}`</Text>}
+          {increment > 0 &&<Text>+ ${increment}</Text>}
+          {decrement > 0 &&<Text> - ${decrement}</Text>}
           <Text style={{fontSize: 20,fontWeight: "bold"}}>{`Total: ${totalForSet}`}</Text>
         </View>
       );
@@ -128,18 +130,12 @@ export default function Landing() {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.box1}>
         <View style={styles.diceContainer}>
           {Object.entries(DiceIcons).map(([key, value]) => (
             <Pressable
               key={key}
-              style={({ pressed }) => [
-                {
-                  backgroundColor: pressed ? "rgb(210, 230, 255)" : "white",
-                },
-                styles.button,
-              ]}
+              style={styles.button}
               onPress={() => incrementMacro(key as keyof Dice)}
             >
               {value}
@@ -147,27 +143,17 @@ export default function Landing() {
           ))}
         </View>
         <View style={styles.diceIncrementDecrement}>
+            <Pressable
+              key={"showDecrementButton"}
+              style={styles.button}
+              onPress={() => setShowDecrement(true)}
+            >
+              {ValueIcons.subtractValue}
+            </Pressable>
           <Pressable
             key={"showIncrementButton"}
-            style={({ pressed }) => [
-              {
-                backgroundColor: pressed ? "rgb(210, 230, 255)" : "white",
-              },
-              styles.button,
-            ]}
+            style={styles.button}
             onPress={() => setShowIncrement(true)}
-          >
-            {ValueIcons.addValue}
-          </Pressable>
-          <Pressable
-            key={"showDecrementButton"}
-            style={({ pressed }) => [
-              {
-                backgroundColor: pressed ? "rgb(210, 230, 255)" : "white",
-              },
-              styles.button,
-            ]}
-            onPress={() => setShowDecrement(true)}
           >
             {ValueIcons.addValue}
           </Pressable>
@@ -194,15 +180,10 @@ export default function Landing() {
             <View style={styles.plusMinusContainer}>
               <Pressable
                 key={"DecrementFalse"}
-                style={({ pressed }) => [
-                  {
-                    backgroundColor: pressed ? "rgb(210, 230, 255)" : "white",
-                  },
-                  styles.button,
-                ]}
+                 style={styles.button}
                 onPress={() => clearDecrement()}
               >
-                {ValueIcons.addValue}
+                {ValueIcons.subtractValue}
               </Pressable>
               <TextInput
                 style={styles.textInput}
@@ -217,12 +198,7 @@ export default function Landing() {
             <View style={styles.plusMinusContainer}>
               <Pressable
                 key={"IncrementFalse"}
-                style={({ pressed }) => [
-                  {
-                    backgroundColor: pressed ? "rgb(210, 230, 255)" : "white",
-                  },
-                  styles.button,
-                ]}
+                style={styles.button}
                 onPress={() => clearIncrement()}
               >
                 {ValueIcons.addValue}
@@ -251,6 +227,9 @@ export default function Landing() {
       </View>  
       
       <View style={styles.box4}>
+          <Pressable style={styles.saveMacroButton} onPress={() => rollMacro(macro)}>
+            <Text style={styles.saveMacroButtonText}>Save Macro</Text>
+          </Pressable>
           <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
             <Text style={styles.rollButtonText}>Roll</Text>
           </Pressable>
@@ -265,23 +244,16 @@ const styles = StyleSheet.create({
     padding: 5,
     marginHorizontal: 6,
     marginVertical: 15,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
   diceContainer: {
-    flex: 2,
-    backgroundColor: "green",
     flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "center",
+    gap: 5,
   },
   diceIncrementDecrement: {
-    flex: 1,
-    backgroundColor: "red",
+    gap: 5,
     flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "center",
   },
   macroContainer: {
     flex: 1,
@@ -293,15 +265,15 @@ const styles = StyleSheet.create({
   box1: {
     flex: 1,
     alignSelf: "stretch",
-    gap: 5,
+    backgroundColor: "#2c3d0d",
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-    box2: {
-      flex: 1,
-      alignSelf: "stretch",
-      backgroundColor: "red",
-    },
+  box2: {
+    flex: 1,
+    alignSelf: "stretch",
+  },
   macroTitle: {
     fontSize: 20,
     marginRight: "auto",
@@ -328,13 +300,14 @@ const styles = StyleSheet.create({
   },
   box4: {
     flex: 1,
+    paddingVertical: 3,
     alignSelf: "stretch",
-    backgroundColor: "blue",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
   },
   rollButton: {
-    width: 100,
+    width: 300,
     height: 50,
     paddingVertical: 12,
     paddingHorizontal: 32,
@@ -355,8 +328,8 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     alignItems: "flex-start",
     borderWidth: 3,
-    borderColor: "Black",
-    backgroundColor: "blue",
+    backgroundColor: "darkseagreen",
+    borderColor: "black",
     justifyContent: "center",
   },
   scrollContainer: {
@@ -379,4 +352,20 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlign: "center",
   },
+  saveMacroButton: {
+    width: 100,
+    height: 50,
+    paddingVertical: 12,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: "black",
+    justifyContent: "center"
+  },
+  saveMacroButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.25,
+    color: 'white',
+    textAlign: "center"
+  }
 });
