@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-function MyTabBar({ state, descriptors, navigation }) {
+function MyTabBar({ state, descriptors, navigation }:BottomTabBarProps) {
   return (
     <View style={{ flexDirection: 'row' }}>
       {state.routes.map((route, index) => {
@@ -35,7 +36,6 @@ function MyTabBar({ state, descriptors, navigation }) {
 
         return (
           <TouchableOpacity
-            key={`navigation tab: ${index}`}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
@@ -53,5 +53,3 @@ function MyTabBar({ state, descriptors, navigation }) {
     </View>
   );
 }
-
-export default MyTabBar
