@@ -1,14 +1,14 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-function MyTabBar({ state, descriptors, navigation }:BottomTabBarProps) {
+export default function MyTabBar({ state, descriptors, navigation }:BottomTabBarProps) {
   return (
     <View style={{ flexDirection: 'row' }}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
-            ? options.tabBarLabel
+            ? options.tabBarLabel.toString()
             : options.title !== undefined
             ? options.title
             : route.name;
