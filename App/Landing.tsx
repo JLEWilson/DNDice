@@ -160,7 +160,6 @@ export default function Landing() {
         </View>
       </View>
 
-      <Text style={styles.macroTitle}>Macro</Text>
       <View style={styles.box2}>
         <View style={styles.macroContainer}>
           {Object.entries(macro).map(
@@ -272,6 +271,7 @@ const styles = StyleSheet.create({
   },
   box2: {
     flex: 1,
+    padding: 5,
     alignSelf: "stretch",
   },
   macroTitle: {
