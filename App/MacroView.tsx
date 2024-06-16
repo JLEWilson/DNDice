@@ -5,7 +5,7 @@ import { DiceIcons, ValueIcons } from "../icons";
 import { Dice, DiceRolls } from "../db";
 import { MacroRandomizer } from "./Utils";
 
-export default function Landing() {
+export default function MacroView() {
   const [macro, setMacro] = React.useState<Dice>({
     D4: 0,
     D6: 0,
