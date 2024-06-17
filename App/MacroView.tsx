@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 5,
     marginHorizontal: 6,
-    marginVertical: 15,
+    marginTop: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -309,8 +309,6 @@ const styles = StyleSheet.create({
   rollButton: {
     width: 300,
     height: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "black",

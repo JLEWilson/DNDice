@@ -1,9 +1,10 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { StyleSheet } from 'react-native';
 
 export default function MyTabBar({ state, descriptors, navigation }:BottomTabBarProps) {
   return (
-    <View style={{ flexDirection: 'row' }}>
+    <View style={styles.container}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const label =
@@ -42,9 +43,10 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
             testID={options.tabBarTestID}
             onPress={onPress}
             onLongPress={onLongPress}
-            style={{ flex: 1 }}
+            key={`NavButton: ${index}`}
+            style={[styles.button, {backgroundColor: isFocused ? "darkseagreen" : "darkolivegreen"}]}
           >
-            <Text style={{ color: isFocused ? '#673ab7' : '#222' }}>
+            <Text key={`NavButtonText: ${index}`} style={{ color: isFocused ? '#2c3d0d' : 'darkseagreen' }}>
               {label}
             </Text>
           </TouchableOpacity>
@@ -53,3 +55,21 @@ export default function MyTabBar({ state, descriptors, navigation }:BottomTabBar
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    display: "flex",
+    paddingHorizontal: 5,
+    flexDirection: "row",
+    backgroundColor: "#2c3d0d",
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  button: {
+    borderRadius: 5,
+    padding: 6,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+});
