@@ -1,9 +1,17 @@
-import { View, Text, Pressable, TextInput, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  ScrollView,
+  Modal,
+} from "react-native";
 import React from "react";
 import { StyleSheet } from "react-native";
-import { DiceIcons, ValueIcons } from "../icons";
+import { Close, DiceIcons, ValueIcons } from "../icons";
 import { Dice, DiceRolls } from "../db";
 import { MacroRandomizer } from "./Utils";
+import { BlurView } from "expo-blur";
 
 export default function MacroView() {
   const [macro, setMacro] = React.useState<Dice>({
@@ -25,12 +33,14 @@ export default function MacroView() {
     D100: [],
   });
   const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
-  const [increment, setIncrement] = React.useState<number>(0  );
+  const [increment, setIncrement] = React.useState<number>(0);
   const [showIncrement, setShowIncrement] = React.useState(false);
   const [decrement, setDecrement] = React.useState<number>(0);
   const [showDecrement, setShowDecrement] = React.useState(false);
-  const [formattedRolls, setFormattedRolls] =  React.useState<JSX.Element[]>([]);
-  const scrollViewRef = React.useRef<ScrollView>(null)
+  const [formattedRolls, setFormattedRolls] = React.useState<JSX.Element[]>([]);
+  const [modalVisible, setModalVisible] = React.useState(false);
+
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   const clearDecrement = () => {
     setShowDecrement(false);
@@ -70,27 +80,31 @@ export default function MacroView() {
   const formatAllRolls = (allRolls: DiceRolls[]) => {
     const rollEntries: JSX.Element[] = allRolls.map((rollSet, index) => {
       let totalForSet = sumAllDiceRolls(rollSet);
-      totalForSet += increment
-      totalForSet -= decrement
+      totalForSet += increment;
+      totalForSet -= decrement;
       return (
         <View key={index} style={styles.outputBlock}>
           {Object.keys(rollSet).map((key) => {
             if (rollSet[key as keyof DiceRolls].length > 0) {
               return (
-                <View  key={key}>
-                  <Text>{`${key}: ${formatRolls(rollSet[key as keyof DiceRolls])}`}</Text>
+                <View key={key}>
+                  <Text>{`${key}: ${formatRolls(
+                    rollSet[key as keyof DiceRolls]
+                  )}`}</Text>
                 </View>
               );
             }
             return null;
           })}
-          {increment > 0 &&<Text>+ ${increment}</Text>}
-          {decrement > 0 &&<Text> - ${decrement}</Text>}
-          <Text style={{fontSize: 20,fontWeight: "bold"}}>{`Total: ${totalForSet}`}</Text>
+          {increment > 0 && <Text>+ ${increment}</Text>}
+          {decrement > 0 && <Text> - ${decrement}</Text>}
+          <Text
+            style={{ fontSize: 20, fontWeight: "bold" }}
+          >{`Total: ${totalForSet}`}</Text>
         </View>
       );
     });
-    
+
     setFormattedRolls(rollEntries);
   };
 
@@ -143,13 +157,13 @@ export default function MacroView() {
           ))}
         </View>
         <View style={styles.diceIncrementDecrement}>
-            <Pressable
-              key={"showDecrementButton"}
-              style={styles.button}
-              onPress={() => setShowDecrement(true)}
-            >
-              {ValueIcons.subtractValue}
-            </Pressable>
+          <Pressable
+            key={"showDecrementButton"}
+            style={styles.button}
+            onPress={() => setShowDecrement(true)}
+          >
+            {ValueIcons.subtractValue}
+          </Pressable>
           <Pressable
             key={"showIncrementButton"}
             style={styles.button}
@@ -179,7 +193,7 @@ export default function MacroView() {
             <View style={styles.plusMinusContainer}>
               <Pressable
                 key={"DecrementFalse"}
-                 style={styles.button}
+                style={styles.button}
                 onPress={() => clearDecrement()}
               >
                 {ValueIcons.subtractValue}
@@ -219,20 +233,70 @@ export default function MacroView() {
           ref={scrollViewRef}
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
-          onContentSizeChange={() => {scrollViewRef.current?.scrollToEnd()}}
+          onContentSizeChange={() => {
+            scrollViewRef.current?.scrollToEnd();
+          }}
         >
           {formattedRolls}
         </ScrollView>
-      </View>  
-      
+      </View>
+
       <View style={styles.box4}>
-          <Pressable style={styles.saveMacroButton} onPress={() => rollMacro(macro)}>
-            <Text style={styles.saveMacroButtonText}>Save Macro</Text>
-          </Pressable>
-          <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
-            <Text style={styles.rollButtonText}>Roll</Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={styles.saveMacroButton}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.saveMacroButtonText}>Save Macro</Text>
+        </Pressable>
+        <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
+          <Text style={styles.rollButtonText}>Roll</Text>
+        </Pressable>
+      </View>
+
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
+          <View style={styles.modal}>
+            <Pressable
+              onPress={() => setModalVisible(false)}
+              style={{ position: "absolute", top: 3, right: 3 }}
+            >
+              <Text>{Close}</Text>
+            </Pressable>
+            <Text style={{fontWeight: "bold", fontSize: 20}}>Macro Name</Text>
+            <TextInput style={styles.modalTextInput} maxLength={25} />
+            <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
+              {Object.entries(macro).map(
+                ([key, value]) =>
+                  value > 0 && (
+                    <Text key={`modal macro text ${key}`}>
+                      {DiceIcons[key as keyof typeof DiceIcons]}: {value}
+                    </Text>
+                  )
+              )}
+              {showIncrement && (
+                <Text>
+                  {ValueIcons.addValue}: {increment}
+                </Text>
+              )}
+              {showDecrement && (
+                <Text>
+                  {ValueIcons.subtractValue}: {decrement}
+                </Text>
+              )}
+            </View>
+            <Pressable
+              style={[styles.saveMacroButton, {position: "absolute", bottom: 5}]}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={styles.saveMacroButtonText}>Save Macro</Text>
+            </Pressable>
+          </View>
+        </BlurView>
+      </Modal>
     </View>
   );
 }
@@ -312,14 +376,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "black",
-    justifyContent: "center"
-    },
+    justifyContent: "center",
+  },
   rollButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.25,
-    color: 'white',
-    textAlign: "center"
+    color: "white",
+    textAlign: "center",
   },
   box3: {
     flex: 3,
@@ -336,10 +400,10 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   scrollContent: {
-    paddingBottom:30
+    paddingBottom: 30,
   },
   outputBlock: {
-    marginBottom: 20
+    marginBottom: 20,
   },
   textInput: {
     height: 40,
@@ -357,13 +421,31 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "black",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   saveMacroButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.25,
-    color: 'white',
-    textAlign: "center"
-  }
+    color: "white",
+    textAlign: "center",
+  },
+  modal: {
+    alignItems: "center",
+    justifyContent: "flex-start",
+    top: "25%",
+    left: "15%",
+    height: "50%",
+    width: "70%",
+    backgroundColor: "darkolivegreen",
+    borderRadius: 10,
+    borderColor: "black",
+    borderWidth: 2,
+  },
+  modalTextInput: {
+    width: 200,
+    height: 40,
+    backgroundColor: "darkseagreen",
+    borderWidth: 1,
+  },
 });
