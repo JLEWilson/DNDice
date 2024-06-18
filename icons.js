@@ -9,6 +9,7 @@ const D20 = <Icon name="dice-d20" size={30} color="#000000" />;
 const D100 = <Icon name="cash-100" size={30} color="#000000" />;
 const addValue = <Icon name="numeric-positive-1" size={30} color="#000000"/>
 const subtractValue = <Icon name="numeric-negative-1" size={30} color="#000000"/>
+const Close = <Icon name="close-circle" size={30} color="#000000"/>
 
 const DiceIcons = {
   D4,
@@ -24,4 +25,4 @@ const ValueIcons = {
   subtractValue
 }
 
-export {DiceIcons, ValueIcons}
+export {DiceIcons, ValueIcons, Close}
