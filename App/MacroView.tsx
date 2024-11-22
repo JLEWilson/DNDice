@@ -12,8 +12,14 @@ import { Close, DiceIcons, ValueIcons } from "../icons";
 import { Dice, DiceRolls } from "../db";
 import { MacroRandomizer } from "./Utils";
 import { BlurView } from "expo-blur";
+import type { Macro, updateMacro, createMacro } from "../db";
+import { v4 as uuidv4 } from 'uuid';
 
-export default function MacroView() {
+type MacroViewProps = {
+  selectedMacro?: Macro
+}
+
+export default function MacroView(props: MacroViewProps) {
   const [macro, setMacro] = React.useState<Dice>({
     D4: 0,
     D6: 0,
@@ -32,6 +38,7 @@ export default function MacroView() {
     D20: [],
     D100: [],
   });
+  const [macroName, setMacroName] = React.useState("");
   const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
   const [increment, setIncrement] = React.useState<number>(0);
   const [showIncrement, setShowIncrement] = React.useState(false);
@@ -58,8 +65,6 @@ export default function MacroView() {
       return Object.values(diceRolls).some((dice) => dice.length > 0);
     }
   };
-
-  const total = hasNumbers(rolls) ? sumAllDiceRolls(rolls) : null;
 
   const rollMacro = (macro: Dice) => {
     const x = MacroRandomizer(macro);
@@ -141,6 +146,26 @@ export default function MacroView() {
       [key]: Math.max(0, prevMacro[key] - 1),
     }));
   };
+
+  const saveMacro = () => {
+    if(props.selectedMacro !== undefined) {
+      //macro is being edited
+    } else {
+      //macro is being created
+      let newMacro: Macro = {
+        id: uuidv4(),
+        name: macroName,
+        dice: macro,
+        add: increment,
+        subtract: decrement
+      }
+    }
+  
+  }
+  const handleSubmitModal = () => {
+    saveMacro()
+    setModalVisible(false)
+  }
 
   return (
     <View style={styles.container}>
@@ -267,7 +292,11 @@ export default function MacroView() {
               <Text>{Close}</Text>
             </Pressable>
             <Text style={{fontWeight: "bold", fontSize: 20}}>Macro Name</Text>
-            <TextInput style={styles.modalTextInput} maxLength={25} />
+            <TextInput 
+              style={styles.modalTextInput} 
+              maxLength={25} 
+              onChangeText={(text) => setMacroName(text)}
+            />
             <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
               {Object.entries(macro).map(
                 ([key, value]) =>
@@ -290,7 +319,7 @@ export default function MacroView() {
             </View>
             <Pressable
               style={[styles.saveMacroButton, {position: "absolute", bottom: 5}]}
-              onPress={() => setModalVisible(true)}
+              onPress={() => setModalVisible(false)}
             >
               <Text style={styles.saveMacroButtonText}>Save Macro</Text>
             </Pressable>
@@ -445,6 +474,7 @@ const styles = StyleSheet.create({
   modalTextInput: {
     width: 200,
     height: 40,
+    textAlign: "center",
     backgroundColor: "darkseagreen",
     borderWidth: 1,
   },
