@@ -89,6 +89,14 @@ export const getAllMacros = async (): Promise<Macro[]> => {
   }
 };
 
+// export const getMacroById = async (): Promise<Macro> => (
+//   try {
+//     const storedMacro = await AsyncStorage.getItem
+//   } catch (error) {
+    
+//   }
+// );
+
 export const updateMacro = async (updatedMacro: Macro): Promise<void> => {
   try {
     const existingMacros = await getAllMacros();

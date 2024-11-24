@@ -1,14 +1,28 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
+import {useNavigation} from '@react-navigation/native'
 import { testMacros } from '../db'
+import { RootTabParamList } from './MyTabBar';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+
+type MacroEditNavigationProp = BottomTabNavigationProp<RootTabParamList, 'MacroEdit'>;
+
 
 const MacrosList = () => {
+  const navigation = useNavigation<MacroEditNavigationProp>();
+
+  const handleMacroSelect = (id: string) => {
+    navigation.navigate('MacroEdit', {
+      macroId: id,
+    });
+  };
+
   return (
     <View style={styles.container}>
       {testMacros.map((m) => (
-        <View key={m.id}>
+        <TouchableOpacity key={m.id} onPress={() => handleMacroSelect(m.id)}>
             <Text>{m.name}</Text>
-        </View>
+        </TouchableOpacity>
       ))}
     </View>
   )

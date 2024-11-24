@@ -1,9 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import MacroView from "./App/MacroView";
+import MacroEdit from "./App/MacroEdit";
 import MacrosList from "./App/MacrosList";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import MyTabBar from "./App/MyTabBar"
+import MyTabBar, { RootTabParamList } from "./App/MyTabBar"
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 
 const MyTheme = {
@@ -14,14 +14,15 @@ const MyTheme = {
   },
 };
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export default function App() {
   return (
     <NavigationContainer theme={MyTheme}>
+      <StatusBar/>
       <Tab.Navigator tabBar={props => <MyTabBar {...props} />}>
-        <Tab.Screen name="Home" component={MacrosList} options={{headerShown: false}}/>
-        <Tab.Screen name="New Macro" component={MacroView} options={{headerShown: false}}/>
+        <Tab.Screen name="MacrosList" component={MacrosList} options={{headerShown: false}}/>
+        <Tab.Screen name="MacroEdit" component={MacroEdit} options={{headerShown: false}}/>
       </Tab.Navigator>
     </NavigationContainer>
   );

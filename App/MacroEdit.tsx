@@ -5,21 +5,40 @@ import {
   TextInput,
   ScrollView,
   Modal,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { Close, DiceIcons, ValueIcons } from "../icons";
-import { Dice, DiceRolls } from "../db";
+import { Dice, DiceRolls, getAllMacros } from "../db";
 import { MacroRandomizer } from "./Utils";
 import { BlurView } from "expo-blur";
-import type { Macro, updateMacro, createMacro } from "../db";
+import type { Macro, } from "../db";
 import { v4 as uuidv4 } from 'uuid';
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import type { RootTabParamList } from "./MyTabBar";
 
-type MacroViewProps = {
-  selectedMacro?: Macro
-}
+export type MacroEditScreenProps = BottomTabScreenProps<RootTabParamList, 'MacroEdit'>;
 
-export default function MacroView(props: MacroViewProps) {
+function MacroEdit( {route}: MacroEditScreenProps ){
+  const {macroId} = route.params || {}
+  const [selectedMacro, setSelectedMacro] = React.useState<Macro | undefined>(undefined)
+
+  React.useEffect(() => {
+    const fetchMacros = async () => {
+      try {
+        const storedMacros = await getAllMacros();
+        const target = storedMacros.find(a => a.id === macroId)
+        setSelectedMacro(target);
+      } catch (err) {
+        console.error('Failed to fetch macros. Please try again.');
+      }
+    };
+
+    fetchMacros();
+  }, []);
+
   const [macro, setMacro] = React.useState<Dice>({
     D4: 0,
     D6: 0,
@@ -28,7 +47,7 @@ export default function MacroView(props: MacroViewProps) {
     D12: 0,
     D20: 0,
     D100: 0,
-  });
+  } );
   const [rolls, setRolls] = React.useState<DiceRolls>({
     D4: [],
     D6: [],
@@ -46,7 +65,25 @@ export default function MacroView(props: MacroViewProps) {
   const [showDecrement, setShowDecrement] = React.useState(false);
   const [formattedRolls, setFormattedRolls] = React.useState<JSX.Element[]>([]);
   const [modalVisible, setModalVisible] = React.useState(false);
-
+  React.useEffect(() => {
+    if (selectedMacro) {
+      // Populate fields with selectedMacro data
+      setMacro(selectedMacro.dice || {
+        D4: 0,
+        D6: 0,
+        D8: 0,
+        D10: 0,
+        D12: 0,
+        D20: 0,
+        D100: 0,
+      });
+      setMacroName(selectedMacro.name || "");
+      setIncrement(selectedMacro.add || 0);
+      setDecrement(selectedMacro.subtract || 0);
+    } else {
+      clearFields()
+    }
+  }, [selectedMacro])
   const scrollViewRef = React.useRef<ScrollView>(null);
 
   const clearDecrement = () => {
@@ -148,7 +185,7 @@ export default function MacroView(props: MacroViewProps) {
   };
 
   const saveMacro = () => {
-    if(props.selectedMacro !== undefined) {
+    if(selectedMacro !== undefined) {
       //macro is being edited
     } else {
       //macro is being created
@@ -162,8 +199,36 @@ export default function MacroView(props: MacroViewProps) {
     }
   
   }
+  const clearFields = () => {
+    setSelectedMacro(undefined)
+    setMacro({
+      D4: 0,
+      D6: 0,
+      D8: 0,
+      D10: 0,
+      D12: 0,
+      D20: 0,
+      D100: 0,
+    });
+    setRolls({
+      D4: [],
+      D6: [],
+      D8: [],
+      D10: [],
+      D12: [],
+      D20: [],
+      D100: [],
+    });
+    setMacroName("");
+    setAllRolls([]);
+    setIncrement(0);
+    setDecrement(0);
+    setShowIncrement(false);
+    setShowDecrement(false);
+  }
   const handleSubmitModal = () => {
     saveMacro()
+    clearFields
     setModalVisible(false)
   }
 
@@ -267,14 +332,14 @@ export default function MacroView(props: MacroViewProps) {
       </View>
 
       <View style={styles.box4}>
+        <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
+          <Text style={styles.rollButtonText}>Roll</Text>
+        </Pressable>
         <Pressable
           style={styles.saveMacroButton}
           onPress={() => setModalVisible(true)}
         >
           <Text style={styles.saveMacroButtonText}>Save Macro</Text>
-        </Pressable>
-        <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
-          <Text style={styles.rollButtonText}>Roll</Text>
         </Pressable>
       </View>
 
@@ -283,52 +348,58 @@ export default function MacroView(props: MacroViewProps) {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
-          <View style={styles.modal}>
-            <Pressable
-              onPress={() => setModalVisible(false)}
-              style={{ position: "absolute", top: 3, right: 3 }}
-            >
-              <Text>{Close}</Text>
-            </Pressable>
-            <Text style={{fontWeight: "bold", fontSize: 20}}>Macro Name</Text>
-            <TextInput 
-              style={styles.modalTextInput} 
-              maxLength={25} 
-              onChangeText={(text) => setMacroName(text)}
-            />
-            <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
-              {Object.entries(macro).map(
-                ([key, value]) =>
-                  value > 0 && (
-                    <Text key={`modal macro text ${key}`}>
-                      {DiceIcons[key as keyof typeof DiceIcons]}: {value}
-                    </Text>
-                  )
-              )}
-              {showIncrement && (
-                <Text>
-                  {ValueIcons.addValue}: {increment}
-                </Text>
-              )}
-              {showDecrement && (
-                <Text>
-                  {ValueIcons.subtractValue}: {decrement}
-                </Text>
-              )}
+        <ScrollView
+        style={{flex: 1}} contentContainerStyle={{minHeight: '100%'}}
+        >
+          <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
+            <View style={styles.modal} >
+              <Pressable
+                onPress={() => setModalVisible(false)}
+                style={{ position: "absolute", top: 3, right: 3 }}
+              >
+                <Text>{Close}</Text>
+              </Pressable>
+              <Text style={{fontWeight: "bold", fontSize: 20}}>Macro Name</Text>
+              <TextInput 
+                style={styles.modalTextInput} 
+                maxLength={25} 
+                onChangeText={(text) => setMacroName(text)}
+              />
+              <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
+                {Object.entries(macro).map(
+                  ([key, value]) =>
+                    value > 0 && (
+                      <Text key={`modal macro text ${key}`}>
+                        {DiceIcons[key as keyof typeof DiceIcons]}: {value}
+                      </Text>
+                    )
+                )}
+                {showIncrement && (
+                  <Text>
+                    {ValueIcons.addValue}: {increment}
+                  </Text>
+                )}
+                {showDecrement && (
+                  <Text>
+                    {ValueIcons.subtractValue}: {decrement}
+                  </Text>
+                )}
+              </View>
+              <Pressable
+                style={[styles.rollButton, {position: "absolute", bottom: 5}]}
+                onPress={handleSubmitModal}
+              >
+                <Text style={styles.saveMacroButtonText}>Save Macro</Text>
+              </Pressable>
             </View>
-            <Pressable
-              style={[styles.saveMacroButton, {position: "absolute", bottom: 5}]}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.saveMacroButtonText}>Save Macro</Text>
-            </Pressable>
-          </View>
-        </BlurView>
+          </BlurView>
+        </ScrollView>
       </Modal>
     </View>
   );
 }
+
+export default MacroEdit
 
 const styles = StyleSheet.create({
   container: {
@@ -399,7 +470,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  rollButton: {
+  saveMacroButton: {
     width: 300,
     height: 50,
     borderRadius: 4,
@@ -407,7 +478,7 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     justifyContent: "center",
   },
-  rollButtonText: {
+  saveMacroButtonText: {
     fontSize: 16,
     fontWeight: "bold",
     letterSpacing: 0.25,
@@ -443,7 +514,7 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlign: "center",
   },
-  saveMacroButton: {
+  rollButton: {
     width: 100,
     height: 50,
     paddingVertical: 12,
@@ -452,7 +523,7 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     justifyContent: "center",
   },
-  saveMacroButtonText: {
+  rollButtonText: {
     fontSize: 16,
     fontWeight: "bold",
     letterSpacing: 0.25,
