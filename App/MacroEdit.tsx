@@ -25,20 +25,6 @@ export type MacroEditScreenProps = BottomTabScreenProps<RootTabParamList, 'Macro
 function MacroEdit( {route}: MacroEditScreenProps ){
   const {macrosList, macroId} = route.params || {}
   const [selectedMacro, setSelectedMacro] = React.useState<Macro | undefined>(undefined)
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if(macrosList && macrosList.length > 0){
-        console.log(macroId)
-        const target = macrosList.find(a => a.id === macroId)
-        console.log(target?.name)
-        setSelectedMacro(target);
-      }
-      return () => {
-        clearFields()
-      };
-  }, []));
-
   const [macro, setMacro] = React.useState<Dice>({
   D4: 0,
     D6: 0,
@@ -56,7 +42,20 @@ function MacroEdit( {route}: MacroEditScreenProps ){
   const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
   const [formattedRolls, setFormattedRolls] = React.useState<JSX.Element[]>([]);
   const [modalVisible, setModalVisible] = React.useState(false);
-  
+  const scrollViewRef = React.useRef<ScrollView>(null);
+   
+  useFocusEffect(
+    React.useCallback(() => {
+      if(macrosList && macrosList.length > 0){
+        console.log(macroId)
+        const target = macrosList.find(a => a.id === macroId)
+        console.log(target?.name)
+        setSelectedMacro(target);
+      }
+      return () => {
+        clearFields()
+      };
+  }, [macroId]));
   React.useEffect(() => {
     if (selectedMacro) {
       setMacro(selectedMacro.dice || macro);
@@ -65,8 +64,10 @@ function MacroEdit( {route}: MacroEditScreenProps ){
       setDecrement(selectedMacro.subtract || 0);
     }
   }, [selectedMacro]);
-
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  React.useEffect(() => {
+    formatAllRolls(allRolls);
+  }, [allRolls]);
+  
 
   const clearDecrement = () => {
     setShowDecrement(false);
@@ -130,10 +131,6 @@ function MacroEdit( {route}: MacroEditScreenProps ){
 
     setFormattedRolls(rollEntries);
   };
-
-  React.useEffect(() => {
-    formatAllRolls(allRolls);
-  }, [allRolls]);
 
   function sumAllDiceRolls(diceRolls: DiceRolls): number {
     let sum = 0;
@@ -200,7 +197,7 @@ function MacroEdit( {route}: MacroEditScreenProps ){
       D100: 0,
     });
     
-    setMacroName("");
+    setMacroName("New Macro");
     setAllRolls([]);
     setIncrement(0);
     setDecrement(0);
