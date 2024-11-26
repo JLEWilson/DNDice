@@ -5,10 +5,8 @@ import {
   TextInput,
   ScrollView,
   Modal,
-  KeyboardAvoidingView,
-  Platform
 } from "react-native";
-import React from "react";
+import React, {useState, useCallback, useRef, useEffect} from "react";
 import { StyleSheet } from "react-native";
 import { Close, DiceIcons, ValueIcons } from "../icons";
 import { createMacro, updateMacro, Dice, DiceRolls, getAllMacros } from "../db";
@@ -24,8 +22,8 @@ export type MacroEditScreenProps = BottomTabScreenProps<RootTabParamList, 'Macro
 
 function MacroEdit( {route}: MacroEditScreenProps ){
   const {macrosList, macroId} = route.params || {}
-  const [selectedMacro, setSelectedMacro] = React.useState<Macro | undefined>(undefined)
-  const [macro, setMacro] = React.useState<Dice>({
+  const [selectedMacro, setSelectedMacro] = useState<Macro | undefined>(undefined)
+  const [macro, setMacro] = useState<Dice>({
   D4: 0,
     D6: 0,
     D8: 0,
@@ -34,18 +32,21 @@ function MacroEdit( {route}: MacroEditScreenProps ){
     D20: 0,
     D100: 0,
   } );
-  const [macroName, setMacroName] = React.useState("New Macro");
-  const [increment, setIncrement] = React.useState<number>(0);
-  const [decrement, setDecrement] = React.useState<number>(0);
-  const [showIncrement, setShowIncrement] = React.useState(false);
-  const [showDecrement, setShowDecrement] = React.useState(false);
-  const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
-  const [formattedRolls, setFormattedRolls] = React.useState<JSX.Element[]>([]);
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  const [macroName, setMacroName] = useState("New Macro");
+  const [increment, setIncrement] = useState<number>(0);
+  const [decrement, setDecrement] = useState<number>(0);
+  const [showIncrement, setShowIncrement] = useState(false);
+  const [showDecrement, setShowDecrement] = useState(false);
+  const [allRolls, setAllRolls] = useState<DiceRolls[]>([]);
+  const [formattedRolls, setFormattedRolls] = useState<JSX.Element[]>([]);
+  const [inputModalVisible, setInputModalVisible] = useState(false)
+  const [selectedInputKey, setSelectedInputKey] = useState<keyof Dice | undefined>(undefined)
+  const [inputTotal, setInputTotal] = useState(0)
+  const [saveModalVisible, setsaveModalVisible] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
    
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       if(macrosList && macrosList.length > 0){
         console.log(macroId)
         const target = macrosList.find(a => a.id === macroId)
@@ -56,7 +57,8 @@ function MacroEdit( {route}: MacroEditScreenProps ){
         clearFields()
       };
   }, [macroId]));
-  React.useEffect(() => {
+  
+  useEffect(() => {
     if (selectedMacro) {
       setMacro(selectedMacro.dice || macro);
       setMacroName(selectedMacro.name || "");
@@ -64,7 +66,8 @@ function MacroEdit( {route}: MacroEditScreenProps ){
       setDecrement(selectedMacro.subtract || 0);
     }
   }, [selectedMacro]);
-  React.useEffect(() => {
+  
+  useEffect(() => {
     formatAllRolls(allRolls);
   }, [allRolls]);
   
@@ -162,6 +165,13 @@ function MacroEdit( {route}: MacroEditScreenProps ){
     }));
   };
 
+  const setMacroTotal = (key: keyof Dice, value: number) => {
+    setMacro((prevMacro) => ({
+      ...prevMacro,
+      [key]: value,
+    }));
+  };
+
   const saveMacro = () => {
     if(macroId !== undefined) {
       //macro is being edited
@@ -204,9 +214,13 @@ function MacroEdit( {route}: MacroEditScreenProps ){
     setShowIncrement(false);
     setShowDecrement(false);
   }
+  const handleInputModal = () => {
+    setMacroTotal(selectedInputKey as keyof Dice, inputTotal)
+    setInputModalVisible(false)
+  }
   const handleSubmitModal = () => {
     saveMacro()
-    setModalVisible(false)
+    setsaveModalVisible(false)
   }
 
   return (
@@ -219,6 +233,10 @@ function MacroEdit( {route}: MacroEditScreenProps ){
               key={key}
               style={styles.button}
               onPress={() => incrementMacro(key as keyof Dice)}
+              onLongPress={() => {
+                setSelectedInputKey(key as keyof Dice)
+                setInputModalVisible(true)
+              }}
             >
               {value}
             </Pressable>
@@ -251,6 +269,10 @@ function MacroEdit( {route}: MacroEditScreenProps ){
                   key={key}
                   style={styles.macroItem}
                   onPress={() => decrementMacro(key as keyof Dice)}
+                  onLongPress={() => {
+                    setSelectedInputKey(key as keyof Dice)
+                    setInputModalVisible(true)
+                  }}
                 >
                   {DiceIcons[key as keyof typeof DiceIcons]}
                   <Text>{`: ${value}`}</Text>
@@ -310,27 +332,63 @@ function MacroEdit( {route}: MacroEditScreenProps ){
       </View>
 
       <View style={styles.box4}>
-        <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
-          <Text style={styles.rollButtonText}>Roll</Text>
-        </Pressable>
+        <View style={{flex: 1, flexDirection: "row", gap: 50}}>
         <Pressable
           style={styles.saveMacroButton}
-          onPress={() => setModalVisible(true)}
+          onPress={() => setsaveModalVisible(true)}
         >
           <Text style={styles.saveMacroButtonText}>Save Macro</Text>
         </Pressable>
-        <Pressable
-          style={styles.clearButton}
-          onPress={clearFields}
-        >
-          <Text style={styles.saveMacroButtonText}>Clear</Text>
+          <Pressable
+            style={styles.clearButton}
+            onPress={clearFields}
+            >
+            <Text style={styles.saveMacroButtonText}>Clear</Text>
+          </Pressable>
+        </View>
+        <Pressable style={styles.rollButton} onPress={() => rollMacro(macro)}>
+          <Text style={styles.rollButtonText}>Roll</Text>
         </Pressable>
       </View>
 
       <Modal
+      transparent={true}
+      visible={inputModalVisible}
+      onRequestClose={() => setInputModalVisible(false)}
+      >
+       <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
+          <View style={[styles.modal, {height: 300, gap: 50}]}>
+          {Object.entries(macro).map(
+            ([key, value]) =>
+              key == selectedInputKey && (
+                <View
+                  key={key}
+                  style={styles.macroItem}
+                >
+                  {DiceIcons[key as keyof typeof DiceIcons]}
+                </View>
+              )
+          )}
+            <TextInput 
+              style={[styles.textInput, {backgroundColor: 'white', width: 100}]}
+              defaultValue={selectedInputKey ? macro[selectedInputKey].toString() : '0'}
+              keyboardType="numeric" 
+              onChangeText={(v) => setInputTotal(parseInt(v))} 
+            />
+            <Pressable
+                style={[styles.rollButton, {position: "absolute", bottom: 5, width: 200}]}
+                onPress={handleInputModal}
+              >
+                <Text style={styles.saveMacroButtonText}>Set Die Amount</Text>
+              </Pressable>
+          </View>
+        </BlurView>
+      </Modal>
+
+      <Modal
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        visible={saveModalVisible}
+        onRequestClose={() => setsaveModalVisible(false)}
       >
         <ScrollView
         style={{flex: 1}} contentContainerStyle={{minHeight: '100%'}}
@@ -338,7 +396,7 @@ function MacroEdit( {route}: MacroEditScreenProps ){
           <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
             <View style={styles.modal} >
               <Pressable
-                onPress={() => setModalVisible(false)}
+                onPress={() => setsaveModalVisible(false)}
                 style={{ position: "absolute", top: 3, right: 3 }}
               >
                 <Text>{Close}</Text>
@@ -456,7 +514,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveMacroButton: {
-    width: 300,
+    width: 120,
     height: 50,
     borderRadius: 4,
     elevation: 3,
@@ -500,7 +558,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   rollButton: {
-    width: 100,
+    width: 200,
     height: 50,
     paddingVertical: 12,
     borderRadius: 4,
@@ -535,16 +593,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   clearButton: {
-    width: 100,
+    width: 120,
     height: 50,
     paddingVertical: 12,
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "red",
     justifyContent: "center",
-    position: "absolute", 
-    bottom: 65, 
-    right: 5, 
     color: 'black',
   }
 });
