@@ -1,10 +1,11 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
+import type { Macro } from '../db';
 
 export type RootTabParamList = {
   MacrosList: undefined;
-  MacroEdit: { macroId: string | undefined};
+  MacroEdit: { macrosList: Macro[],  macroId: string | undefined};
 };
 
 export default function MyTabBar({ state, descriptors, navigation }:BottomTabBarProps) {

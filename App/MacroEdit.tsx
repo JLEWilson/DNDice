@@ -11,36 +11,36 @@ import {
 import React from "react";
 import { StyleSheet } from "react-native";
 import { Close, DiceIcons, ValueIcons } from "../icons";
-import { Dice, DiceRolls, getAllMacros } from "../db";
+import { createMacro, updateMacro, Dice, DiceRolls, getAllMacros } from "../db";
 import { MacroRandomizer } from "./Utils";
 import { BlurView } from "expo-blur";
 import type { Macro, } from "../db";
+import "react-native-get-random-values";
 import { v4 as uuidv4 } from 'uuid';
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { RootTabParamList } from "./MyTabBar";
-
+import { useFocusEffect } from "@react-navigation/native";
 export type MacroEditScreenProps = BottomTabScreenProps<RootTabParamList, 'MacroEdit'>;
 
 function MacroEdit( {route}: MacroEditScreenProps ){
-  const {macroId} = route.params || {}
+  const {macrosList, macroId} = route.params || {}
   const [selectedMacro, setSelectedMacro] = React.useState<Macro | undefined>(undefined)
 
-  React.useEffect(() => {
-    const fetchMacros = async () => {
-      try {
-        const storedMacros = await getAllMacros();
-        const target = storedMacros.find(a => a.id === macroId)
+  useFocusEffect(
+    React.useCallback(() => {
+      if(macrosList && macrosList.length > 0){
+        console.log(macroId)
+        const target = macrosList.find(a => a.id === macroId)
+        console.log(target?.name)
         setSelectedMacro(target);
-      } catch (err) {
-        console.error('Failed to fetch macros. Please try again.');
       }
-    };
-
-    fetchMacros();
-  }, []);
+      return () => {
+        clearFields()
+      };
+  }, []));
 
   const [macro, setMacro] = React.useState<Dice>({
-    D4: 0,
+  D4: 0,
     D6: 0,
     D8: 0,
     D10: 0,
@@ -48,42 +48,24 @@ function MacroEdit( {route}: MacroEditScreenProps ){
     D20: 0,
     D100: 0,
   } );
-  const [rolls, setRolls] = React.useState<DiceRolls>({
-    D4: [],
-    D6: [],
-    D8: [],
-    D10: [],
-    D12: [],
-    D20: [],
-    D100: [],
-  });
-  const [macroName, setMacroName] = React.useState("");
-  const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
+  const [macroName, setMacroName] = React.useState("New Macro");
   const [increment, setIncrement] = React.useState<number>(0);
-  const [showIncrement, setShowIncrement] = React.useState(false);
   const [decrement, setDecrement] = React.useState<number>(0);
+  const [showIncrement, setShowIncrement] = React.useState(false);
   const [showDecrement, setShowDecrement] = React.useState(false);
+  const [allRolls, setAllRolls] = React.useState<DiceRolls[]>([]);
   const [formattedRolls, setFormattedRolls] = React.useState<JSX.Element[]>([]);
   const [modalVisible, setModalVisible] = React.useState(false);
+  
   React.useEffect(() => {
     if (selectedMacro) {
-      // Populate fields with selectedMacro data
-      setMacro(selectedMacro.dice || {
-        D4: 0,
-        D6: 0,
-        D8: 0,
-        D10: 0,
-        D12: 0,
-        D20: 0,
-        D100: 0,
-      });
+      setMacro(selectedMacro.dice || macro);
       setMacroName(selectedMacro.name || "");
-      setIncrement(selectedMacro.add || 0);
+      setIncrement(selectedMacro.add || 0); 
       setDecrement(selectedMacro.subtract || 0);
-    } else {
-      clearFields()
     }
-  }, [selectedMacro])
+  }, [selectedMacro]);
+
   const scrollViewRef = React.useRef<ScrollView>(null);
 
   const clearDecrement = () => {
@@ -95,17 +77,16 @@ function MacroEdit( {route}: MacroEditScreenProps ){
     setIncrement(0);
   };
 
-  const hasNumbers = (diceRolls: DiceRolls) => {
-    if (Array.isArray(diceRolls)) {
-      return diceRolls.length > 0;
-    } else {
-      return Object.values(diceRolls).some((dice) => dice.length > 0);
-    }
-  };
+  // const hasNumbers = (diceRolls: DiceRolls) => {
+  //   if (Array.isArray(diceRolls)) {
+  //     return diceRolls.length > 0;
+  //   } else {
+  //     return Object.values(diceRolls).some((dice) => dice.length > 0);
+  //   }
+  // };
 
   const rollMacro = (macro: Dice) => {
     const x = MacroRandomizer(macro);
-    setRolls(x);
     setAllRolls((prevAllRolls) => [...prevAllRolls, x]);
   };
 
@@ -138,8 +119,8 @@ function MacroEdit( {route}: MacroEditScreenProps ){
             }
             return null;
           })}
-          {increment > 0 && <Text>+ ${increment}</Text>}
-          {decrement > 0 && <Text> - ${decrement}</Text>}
+          {increment > 0 && <Text>+ {increment}</Text>}
+          {decrement > 0 && <Text>- {decrement}</Text>}
           <Text
             style={{ fontSize: 20, fontWeight: "bold" }}
           >{`Total: ${totalForSet}`}</Text>
@@ -185,19 +166,27 @@ function MacroEdit( {route}: MacroEditScreenProps ){
   };
 
   const saveMacro = () => {
-    if(selectedMacro !== undefined) {
+    if(macroId !== undefined) {
       //macro is being edited
+      const updatedMacro: Macro = {
+        id: macroId,
+        name: macroName,
+        dice: macro,
+        add: increment,
+        subtract: decrement
+      }
+      updateMacro(updatedMacro)
     } else {
       //macro is being created
-      let newMacro: Macro = {
+      const newMacro: Macro = {
         id: uuidv4(),
         name: macroName,
         dice: macro,
         add: increment,
         subtract: decrement
       }
+      createMacro(newMacro)
     }
-  
   }
   const clearFields = () => {
     setSelectedMacro(undefined)
@@ -210,15 +199,7 @@ function MacroEdit( {route}: MacroEditScreenProps ){
       D20: 0,
       D100: 0,
     });
-    setRolls({
-      D4: [],
-      D6: [],
-      D8: [],
-      D10: [],
-      D12: [],
-      D20: [],
-      D100: [],
-    });
+    
     setMacroName("");
     setAllRolls([]);
     setIncrement(0);
@@ -228,12 +209,12 @@ function MacroEdit( {route}: MacroEditScreenProps ){
   }
   const handleSubmitModal = () => {
     saveMacro()
-    clearFields
     setModalVisible(false)
   }
 
   return (
     <View style={styles.container}>
+      <Text style={styles.macroTitle}>{macroName}</Text>
       <View style={styles.box1}>
         <View style={styles.diceContainer}>
           {Object.entries(DiceIcons).map(([key, value]) => (
@@ -341,6 +322,12 @@ function MacroEdit( {route}: MacroEditScreenProps ){
         >
           <Text style={styles.saveMacroButtonText}>Save Macro</Text>
         </Pressable>
+        <Pressable
+          style={styles.clearButton}
+          onPress={clearFields}
+        >
+          <Text style={styles.saveMacroButtonText}>Clear</Text>
+        </Pressable>
       </View>
 
       <Modal
@@ -363,6 +350,7 @@ function MacroEdit( {route}: MacroEditScreenProps ){
               <TextInput 
                 style={styles.modalTextInput} 
                 maxLength={25} 
+                defaultValue={macroName}
                 onChangeText={(text) => setMacroName(text)}
               />
               <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
@@ -440,7 +428,7 @@ const styles = StyleSheet.create({
   },
   macroTitle: {
     fontSize: 20,
-    marginRight: "auto",
+    margin: 4
   },
   plusMinusContainer: {
     flexDirection: "row",
@@ -549,4 +537,17 @@ const styles = StyleSheet.create({
     backgroundColor: "darkseagreen",
     borderWidth: 1,
   },
+  clearButton: {
+    width: 100,
+    height: 50,
+    paddingVertical: 12,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: "red",
+    justifyContent: "center",
+    position: "absolute", 
+    bottom: 65, 
+    right: 5, 
+    color: 'black',
+  }
 });
