@@ -5,6 +5,7 @@ import {
   TextInput,
   ScrollView,
   Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import React, {useState, useCallback, useRef, useEffect} from "react";
 import { StyleSheet } from "react-native";
@@ -357,31 +358,43 @@ function MacroEdit( {route}: MacroEditScreenProps ){
       onRequestClose={() => setInputModalVisible(false)}
       >
        <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
-          <View style={[styles.modal, {height: 300, gap: 50}]}>
-          {Object.entries(macro).map(
-            ([key, value]) =>
-              key == selectedInputKey && (
-                <View
-                  key={key}
-                  style={styles.macroItem}
-                >
-                  {DiceIcons[key as keyof typeof DiceIcons]}
-                </View>
-              )
-          )}
-            <TextInput 
-              style={[styles.textInput, {backgroundColor: 'white', width: 100}]}
-              defaultValue={selectedInputKey ? macro[selectedInputKey].toString() : '0'}
-              keyboardType="numeric" 
-              onChangeText={(v) => setInputTotal(parseInt(v))} 
-            />
-            <Pressable
-                style={[styles.rollButton, {position: "absolute", bottom: 5, width: 200}]}
-                onPress={handleInputModal}
+        <Pressable style={{width: "auto", height:"auto", flex:1}}
+          onPress={() => setInputModalVisible(false)}
+        >
+          <TouchableWithoutFeedback>
+            <View style={[styles.modal, {height: 300, gap: 50}]}>
+              <Pressable
+                onPress={() => setInputModalVisible(false)}
+                style={{ position: "absolute", top: 3, right: 3 }}
               >
-                <Text style={styles.saveMacroButtonText}>Set Die Amount</Text>
+                <Text>{Close}</Text>
               </Pressable>
-          </View>
+              {Object.entries(macro).map(
+                ([key]) =>
+                  key == selectedInputKey && (
+                    <View
+                    key={key}
+                    style={styles.macroItem}
+                    >
+                      {DiceIcons[key as keyof typeof DiceIcons]}
+                    </View>
+                  )
+              )}
+                <TextInput 
+                  style={[styles.textInput, {backgroundColor: 'white', width: 100}]}
+                  defaultValue={selectedInputKey ? macro[selectedInputKey].toString() : '0'}
+                  keyboardType="numeric" 
+                  onChangeText={(v) => setInputTotal(parseInt(v))} 
+                />
+                <Pressable
+                  style={[styles.rollButton, {position: "absolute", bottom: 5, width: 200}]}
+                  onPress={handleInputModal}
+                >
+                  <Text style={styles.saveMacroButtonText}>Set Die Amount</Text>
+                </Pressable>
+              </View>
+            </TouchableWithoutFeedback>
+          </Pressable>
         </BlurView>
       </Modal>
 
@@ -394,47 +407,53 @@ function MacroEdit( {route}: MacroEditScreenProps ){
         style={{flex: 1}} contentContainerStyle={{minHeight: '100%'}}
         >
           <BlurView intensity={100} tint={"dark"} style={{ flex: 1 }}>
-            <View style={styles.modal} >
-              <Pressable
-                onPress={() => setsaveModalVisible(false)}
-                style={{ position: "absolute", top: 3, right: 3 }}
-              >
-                <Text>{Close}</Text>
-              </Pressable>
-              <Text style={{fontWeight: "bold", fontSize: 20}}>Macro Name</Text>
-              <TextInput 
-                style={styles.modalTextInput} 
-                maxLength={25} 
-                defaultValue={macroName}
-                onChangeText={(text) => setMacroName(text)}
-              />
-              <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
-                {Object.entries(macro).map(
-                  ([key, value]) =>
-                    value > 0 && (
-                      <Text key={`modal macro text ${key}`}>
-                        {DiceIcons[key as keyof typeof DiceIcons]}: {value}
+            <Pressable style={{width: "auto", height:"auto", flex:1}}
+              onPress={() => setsaveModalVisible(false)}
+            >
+              <TouchableWithoutFeedback>
+                <View style={styles.modal} >
+                  <Pressable
+                    onPress={() => setsaveModalVisible(false)}
+                    style={{ position: "absolute", top: 3, right: 3 }}
+                  >
+                    <Text>{Close}</Text>
+                  </Pressable>
+                  <Text style={{fontWeight: "bold", fontSize: 20}}>Macro Name</Text>
+                  <TextInput 
+                    style={styles.modalTextInput} 
+                    maxLength={25} 
+                    defaultValue={macroName}
+                    onChangeText={(text) => setMacroName(text)}
+                  />
+                  <View style={{flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50}}>
+                    {Object.entries(macro).map(
+                      ([key, value]) =>
+                        value > 0 && (
+                          <Text key={`modal macro text ${key}`}>
+                            {DiceIcons[key as keyof typeof DiceIcons]}: {value}
+                          </Text>
+                        )
+                    )}
+                    {showIncrement && (
+                      <Text>
+                        {ValueIcons.addValue}: {increment}
                       </Text>
-                    )
-                )}
-                {showIncrement && (
-                  <Text>
-                    {ValueIcons.addValue}: {increment}
-                  </Text>
-                )}
-                {showDecrement && (
-                  <Text>
-                    {ValueIcons.subtractValue}: {decrement}
-                  </Text>
-                )}
-              </View>
-              <Pressable
-                style={[styles.rollButton, {position: "absolute", bottom: 5}]}
-                onPress={handleSubmitModal}
-              >
-                <Text style={styles.saveMacroButtonText}>Save Macro</Text>
-              </Pressable>
-            </View>
+                    )}
+                    {showDecrement && (
+                      <Text>
+                        {ValueIcons.subtractValue}: {decrement}
+                      </Text>
+                    )}
+                  </View>
+                  <Pressable
+                    style={[styles.rollButton, {position: "absolute", bottom: 5}]}
+                    onPress={handleSubmitModal}
+                  >
+                    <Text style={styles.saveMacroButtonText}>Save Macro</Text>
+                  </Pressable>
+                </View>
+              </TouchableWithoutFeedback>  
+            </Pressable>
           </BlurView>
         </ScrollView>
       </Modal>
