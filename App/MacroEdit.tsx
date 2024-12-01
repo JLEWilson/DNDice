@@ -49,9 +49,7 @@ function MacroEdit( {route}: MacroEditScreenProps ){
   useFocusEffect(
     useCallback(() => {
       if(macrosList && macrosList.length > 0){
-        console.log(macroId)
         const target = macrosList.find(a => a.id === macroId)
-        console.log(target?.name)
         setSelectedMacro(target);
       }
       return () => {
